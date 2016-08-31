@@ -1,27 +1,91 @@
-// Ionic Starter App
+'use strict';
 
-// angular.module is a global place for creating, registering and retrieving Angular modules
-// 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
-// the 2nd parameter is an array of 'requires'
-angular.module('MyMap', ['ionic', 'ngAnimate', 'ngCordova', 'ENV'])
+/**
+ * @ngdoc overview
+ * @name FirstWeb
+ * @description
+ * # Initializes main application and routing
+ *
+ * Main module of the application.
+ */
 
-  .run( [
-    '$ionicPlatform',
+// Example to require lodash
+// This is resolved and bundled by browserify
+//
+// var _ = require( 'lodash' );
 
-    function( $ionicPlatform )
-    {
+angular.module( 'FirstWeb', [
+  'ionic',
+  'ngCordova',
+  'ngResource'
+] )
+.run( [
+  '$ionicPlatform',
 
-      $ionicPlatform.ready(function() {
-        // save to use plugins here
+  function( $ionicPlatform )
+  {
+
+  $ionicPlatform.ready(function() {
+    // save to use plugins here
+  });
+
+  // add possible global event handlers here
+
+} ] )
+
+.config( [
+  '$httpProvider',
+  '$stateProvider',
+  '$urlRouterProvider',
+
+  function( $httpProvider, $stateProvider, $urlRouterProvider )
+  {
+    // register $http interceptors, if any. e.g.
+    // $httpProvider.interceptors.push('interceptor-name');
+
+    // Application routing
+    $stateProvider
+      .state('app', {
+        url: '/app',
+        abstract: true,
+        templateUrl: 'templates/main.html',
+        controller: 'MainController'
+      })
+      .state('app.home', {
+        url: '/home',
+        cache: true,
+        views: {
+          'viewContent': {
+            templateUrl: 'templates/views/home.html',
+            controller: 'HomeController'
+          }
+        }
+      })
+      .state('app.settings', {
+        url: '/settings',
+        cache: true,
+        views: {
+          'viewContent': {
+            templateUrl: 'templates/views/settings.html',
+            controller: 'SettingsController'
+          }
+        }
       });
 
-      // add possible global event handlers here
 
-    } ] )
-
-
-  // config
-  .config(function ($urlRouterProvider) {
     // redirects to default route for undefined routes
     $urlRouterProvider.otherwise('/app/home');
-  });
+  }
+] )
+
+// Angular module controllers
+//
+.controller( 'MainController',     require( './controllers/mainController'     ) )
+.controller( 'HomeController',     require( './controllers/homeController'     ) )
+.controller( 'SettingsController', require( './controllers/settingsController' ) )
+
+// Angular module services
+//
+.factory( 'ExampleService',        require( './services/ExampleService' ) )
+.factory( 'ApiService',            require( './services/ApiService'     ) )
+;

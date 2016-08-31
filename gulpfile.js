@@ -1,6 +1,6 @@
 'use strict';
 
-var appName = 'MyMap';
+var appName = 'FirstWeb';
 
 var gulp = require('gulp');
 var plugins = require('gulp-load-plugins')();
@@ -15,29 +15,27 @@ var streamqueue = require('streamqueue');
 var runSequence = require('run-sequence');
 var merge = require('merge-stream');
 var ripple = require('ripple-emulator');
+var browserify = require('browserify');
+var source = require('vinyl-source-stream');
+var buffer = require('vinyl-buffer');
+var uglify = require('gulp-uglify');
+var sourcemaps = require('gulp-sourcemaps');
+var gutil = require('gulp-util');
 var wiredep = require('wiredep');
-var gulpNgConfig = require('gulp-ng-config');
-var json = require('json-file');
-var series = require('stream-series');
-var notifier = require('node-notifier');
-
 
 /**
  * Parse arguments
  */
 var args = require('yargs')
-  .alias('e', 'emulate')
-  .alias('b', 'build')
-  .alias('r', 'run')
-  .alias('s', 'server')
-  .alias('d', 'debug')
-  // remove all debug messages (console.logs, alerts etc) from release build
-  .alias('release', 'strip-debug')
-  .default('build', false)
-  .default('debug', true)
-  .default('port', 9000)
-  .default('strip-debug', false)
-  .argv;
+    .alias('e', 'emulate')
+    .alias('b', 'build')
+    .alias('r', 'run')
+    // remove all debug messages (console.logs, alerts etc) from release build
+    .alias('release', 'strip-debug')
+    .default('build', false)
+    .default('port', 9000)
+    .default('strip-debug', false)
+    .argv;
 
 var build = !!(args.build || args.emulate || args.run);
 var emulate = args.emulate;
@@ -46,30 +44,17 @@ var port = args.port;
 var stripDebug = !!args.stripDebug;
 var targetDir = path.resolve(build ? 'www' : '.tmp');
 
-var server = args.server;
-
-if (server === true) {
-  // gulp -s
-  server = 'http://0.0.0.0:8888/';
-} else if (server) {
-  //gulp -s 10.32.11.101:8888
-  var hasProtocal = /^(http)/.test(server);
-  if (!hasProtocal) {
-    server = 'http://' + server + '/';
-  }
-}
-
 // if we just use emualate or run without specifying platform, we assume iOS
 // in this case the value returned from yargs would just be true
 if (emulate === true) {
-  emulate = 'ios';
+    emulate = 'ios';
 }
 if (run === true) {
-  run = 'ios';
+    run = 'ios';
 }
 
 // global error handler
-var errorHandler = function (error) {
+var errorHandler = function(error) {
   if (build) {
     throw error;
   } else {
@@ -78,44 +63,36 @@ var errorHandler = function (error) {
   }
 };
 
+
 // clean target dir
-gulp.task('clean', function (done) {
-  return del([targetDir], done);
+gulp.task('clean', function(done) {
+  return del([targetDir, 'app/scripts/bundle.js','app/scripts/bundle.js.map'], done);
 });
 
 // precompile .scss and concat with ionic.css
-gulp.task('styles', function () {
+gulp.task('styles', function() {
 
-  var options = build ? {style: 'compressed'} : {style: 'expanded'};
+  var options = build ? { style: 'compressed' } : { style: 'expanded' };
 
-  var sassStream = gulp.src(['./app/src/**/*.scss'])
-    .pipe(plugins.order([
-      'app/src/commonStyles/**/*.js',
-      'app/src/**/*.scss'
-    ]))
-    .pipe(plugins.concat('bundle-temp.scss'))
-    .pipe(plugins.plumber({errorHandler: function(error) {
-      sassStream.emit('end')
-      notifier.notify({title: 'sass error', message: error.message});
-    }}))
+  var sassStream = gulp.src('app/styles/main.scss')
     .pipe(plugins.sass(options))
-    .on('error', function (err) {
+    .on('error', function(err) {
       console.log('err: ', err);
       beep();
     });
 
   // build ionic css dynamically to support custom themes
-  var ionicStream = gulp.src('app/ionic-styles/ionic-styles.scss')
+  var ionicStream = gulp.src('app/styles/ionic-styles.scss')
     .pipe(plugins.cached('ionic-styles'))
     .pipe(plugins.sass(options))
     // cache and remember ionic .scss in order to cut down re-compile time
     .pipe(plugins.remember('ionic-styles'))
-    .on('error', function (err) {
-      console.log('err: ', err);
-      beep();
-    });
+    .on('error', function(err) {
+        console.log('err: ', err);
+        beep();
+      });
 
-  return series(ionicStream, sassStream)
+  return streamqueue({ objectMode: true }, ionicStream, sassStream)
     .pipe(plugins.autoprefixer('last 1 Chrome version', 'last 3 iOS versions', 'last 3 Android versions'))
     .pipe(plugins.concat('main.css'))
     .pipe(plugins.if(build, plugins.stripCssComments()))
@@ -124,9 +101,28 @@ gulp.task('styles', function () {
     .on('error', errorHandler);
 });
 
+// bundle all the src files into scripts/bundle.js
+gulp.task('browserify', function () {
+  // set up the browserify instance on a task basis
+  var b = browserify({
+    entries: './app/src/app.js',
+    debug: !build
+  });
+
+  return b.bundle()
+    .pipe(source('bundle.js'))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
+        // Add transformation tasks to the pipeline here.
+        .pipe(uglify())
+        .on('error', gutil.log)
+    .pipe(plugins.if(!build,sourcemaps.write('./')))
+    .pipe(gulp.dest('./app/scripts/'));
+});
+
 // build templatecache, copy scripts.
 // if build: concat, minsafe, uglify and versionize
-gulp.task('scripts', function () {
+gulp.task('scripts', ['browserify'], function() {
   var dest = path.join(targetDir, 'scripts');
 
   var minifyConfig = {
@@ -139,31 +135,24 @@ gulp.task('scripts', function () {
   // prepare angular template cache from html templates
   // (remember to change appName var to desired module name)
   var templateStream = gulp
-    .src('**/*.html', {cwd: 'app/src/'})
+    .src('**/*.html', { cwd: 'app/templates'})
     .pipe(plugins.angularTemplatecache('templates.js', {
-      root: 'src/',
+      root: 'templates/',
       module: appName,
       htmlmin: build && minifyConfig
     }));
 
   var scriptStream = gulp
-    .src(['templates.js', 'app.js', '**/*.js'], {cwd: 'app/src'})
+    .src( ['bundle.js', 'bundle.js.map', 'configuration.js', 'templates.js' ], { cwd: 'app/scripts' })
 
     .pipe(plugins.if(!build, plugins.changed(dest)));
 
-  return streamqueue({objectMode: true}, scriptStream, templateStream)
-    .pipe(plugins.plumber({errorHandler: function(error) {
-      this.emit('end')
-      notifier.notify({title: 'sass error', message: error.message});
-    }}))
-    .pipe(plugins.if(build, plugins.sourcemaps.init()))
+  return streamqueue({ objectMode: true }, scriptStream, templateStream)
     .pipe(plugins.if(build, plugins.ngAnnotate()))
-    .pipe(plugins.babel({presets: ['es2015']}))
     .pipe(plugins.if(stripDebug, plugins.stripDebug()))
     .pipe(plugins.if(build, plugins.concat('app.js')))
-    .pipe(plugins.if(build && !emulate, plugins.uglify()))
+    .pipe(plugins.if(build, plugins.uglify()))
     .pipe(plugins.if(build && !emulate, plugins.rev()))
-    .pipe(plugins.if(build, plugins.sourcemaps.write('/')))
 
     .pipe(gulp.dest(dest))
 
@@ -171,7 +160,7 @@ gulp.task('scripts', function () {
 });
 
 // copy fonts
-gulp.task('fonts', function () {
+gulp.task('fonts', function() {
   return gulp
     .src(['app/fonts/*.*', 'bower_components/ionic/release/fonts/*.*'])
 
@@ -180,10 +169,12 @@ gulp.task('fonts', function () {
     .on('error', errorHandler);
 });
 
+
+
 // generate iconfont
-gulp.task('iconfont', function () {
+gulp.task('iconfont', function(){
   return gulp.src('app/icons/*.svg', {
-      buffer: false
+        buffer: false
     })
     .pipe(plugins.iconfontCss({
       fontName: 'ownIconFont',
@@ -192,55 +183,53 @@ gulp.task('iconfont', function () {
       fontPath: '../fonts/'
     }))
     .pipe(plugins.iconfont({
-      fontName: 'ownIconFont'
+        fontName: 'ownIconFont'
     }))
     .pipe(gulp.dest(path.join(targetDir, 'fonts')))
     .on('error', errorHandler);
 });
 
 // copy images
-gulp.task('images', function () {
+gulp.task('images', function() {
   return gulp.src('app/images/**/*.*')
     .pipe(gulp.dest(path.join(targetDir, 'images')))
 
     .on('error', errorHandler);
 });
 
+
 // lint js sources based on .jshintrc ruleset
-gulp.task('jsHint', function (done) {
+gulp.task('jsHint', function() {
   return gulp
     .src('app/src/**/*.js')
-    //.pipe(plugins.jshint())
-    //.pipe(plugins.jshint.reporter(stylish))
-
+    .pipe(plugins.jshint())
+    .pipe(plugins.jshint.reporter(stylish))
     .on('error', errorHandler);
-  done();
 });
 
 // concatenate and minify vendor sources
-gulp.task('vendor', function () {
+gulp.task('vendor', function() {
   var vendorFiles = wiredep().js;
 
   return gulp.src(vendorFiles)
-    .pipe(plugins.if(build, plugins.sourcemaps.init()))
     .pipe(plugins.concat('vendor.js'))
-    .pipe(plugins.if(build && !emulate, plugins.uglify()))
-    .pipe(plugins.if(build && !emulate, plugins.rev()))
-    .pipe(plugins.if(build, plugins.sourcemaps.write('/')))
+    .pipe(plugins.if(build, plugins.uglify()))
+    .pipe(plugins.if(build, plugins.rev()))
 
     .pipe(gulp.dest(targetDir))
 
     .on('error', errorHandler);
 });
 
+
 // inject the files in index.html
-gulp.task('index', ['jsHint', 'scripts'], function () {
+gulp.task('index', ['jsHint', 'scripts'], function() {
 
   // build has a '-versionnumber' suffix
   var cssNaming = 'styles/main*';
 
   // injects 'src' into index.html at position 'tag'
-  var _inject = function (src, tag) {
+  var _inject = function(src, tag) {
     return plugins.inject(src, {
       starttag: '<!-- inject:' + tag + ':{{ext}} -->',
       read: false,
@@ -251,19 +240,19 @@ gulp.task('index', ['jsHint', 'scripts'], function () {
   // get all our javascript sources
   // in development mode, it's better to add each file seperately.
   // it makes debugging easier.
-  var _getAllScriptSources = function () {
-    var scriptStream = gulp.src(['scripts/app.js', 'scripts/**/*.js'], {cwd: targetDir});
-    return streamqueue({objectMode: true}, scriptStream);
+  var _getAllScriptSources = function() {
+    var scriptStream = gulp.src(['scripts/app.js', 'scripts/**/*.js'], { cwd: targetDir });
+    return streamqueue({ objectMode: true }, scriptStream);
   };
 
-  return gulp.src('app/src/index.html')
+  return gulp.src('app/index.html')
     // inject css
-    .pipe(_inject(gulp.src(cssNaming, {cwd: targetDir}), 'app-styles'))
+    .pipe(_inject(gulp.src(cssNaming, { cwd: targetDir }), 'app-styles'))
     // inject vendor.js
-    .pipe(_inject(gulp.src('vendor*.js', {cwd: targetDir}), 'vendor'))
+    .pipe(_inject(gulp.src('vendor*.js', { cwd: targetDir }), 'vendor'))
     // inject app.js (build) or all js files indivually (dev)
     .pipe(plugins.if(build,
-      _inject(gulp.src('scripts/app*.js', {cwd: targetDir}), 'app'),
+      _inject(gulp.src('scripts/app*.js', { cwd: targetDir }), 'app'),
       _inject(_getAllScriptSources(), 'app')
     ))
 
@@ -272,14 +261,12 @@ gulp.task('index', ['jsHint', 'scripts'], function () {
 });
 
 // start local express server
-gulp.task('serve', function () {
-  var app = express();
-
-  app.use(!build ? connectLr() : function () {
-  });
-  app.use(express.static(targetDir));
-
-  app.listen(port);
+gulp.task('serve', function() {
+  express()
+    .use(!build ? connectLr() : function(){})
+    .use(express.static(targetDir))
+    .listen(port);
+  open('http://localhost:' + port + '/');
 });
 
 // ionic emulate wrapper
@@ -309,7 +296,7 @@ gulp.task('select', plugins.shell.task([
 ]));
 
 // ripple emulator
-gulp.task('ripple', ['scripts', 'styles', 'watchers'], function () {
+gulp.task('ripple', ['scripts', 'styles', 'watchers'], function() {
 
   var options = {
     keepAlive: false,
@@ -323,74 +310,29 @@ gulp.task('ripple', ['scripts', 'styles', 'watchers'], function () {
   open('http://localhost:' + options.port + '?enableripple=true');
 });
 
+
 // start watchers
-gulp.task('watchers', function () {
+gulp.task('watchers', function() {
   plugins.livereload.listen();
-  gulp.watch(['app/ionic-styles/**/*.scss', 'app/src/**/*.scss'], ['styles']);
+  gulp.watch('app/styles/**/*.scss', ['styles']);
   gulp.watch('app/fonts/**', ['fonts']);
   gulp.watch('app/icons/**', ['iconfont']);
   gulp.watch('app/images/**', ['images']);
-  gulp.watch(['app/src/**/*.js'], ['index']);
+  gulp.watch(['app/scripts/**/*.js','!app/scripts/bundle.js'], ['index']);
   gulp.watch('./bower.json', ['vendor']);
-  gulp.watch('app/src/**/*.html', ['index']);
-  gulp.watch('app/src/index.html', ['index']);
+  gulp.watch('app/templates/**/*.html', ['index']);
+  gulp.watch('app/index.html', ['index']);
+  gulp.watch('app/src/**/*.js', ['scripts']);
   gulp.watch(targetDir + '/**')
     .on('change', plugins.livereload.changed)
     .on('error', errorHandler);
 });
 
 // no-op = empty function
-gulp.task('noop', function () {
-});
-
-// dev environment
-gulp.task('devENV', function () {
-  return gulp.src('ENV.json')
-    .pipe(gulpNgConfig('ENV', {environment: 'dev'}))
-    .pipe(gulp.dest('app/src/component/config/'))
-    .on('error', errorHandler);
-});
-
-var configPath = 'app/src/component/config/';
-
-// production environment
-gulp.task('productionENV', function () {
-  console.log(plugins);
-  return gulp.src('ENV.json')
-    .pipe(gulpNgConfig('ENV', {environment: 'production'}))
-    .pipe(gulp.dest(configPath))
-    .on('error', errorHandler);
-});
-
-// production environment
-gulp.task('productionENV', function () {
-  console.log(plugins);
-  return gulp.src('ENV.json')
-    .pipe(gulpNgConfig('ENV', {environment: 'production'}))
-    .pipe(gulp.dest(configPath))
-    .on('error', errorHandler);
-});
-
-// customizeEnv environment
-gulp.task('customizeEnv', function () {
-  var fs = require('fs');
-  fs.writeFileSync('./.ENVTemplate.json', '{}');
-
-  return gulp.src('.ENVTemplate.json')
-    .pipe(plugins.jsonEditor({
-      ENVconfig: {
-        serverBase: server
-      }
-    }))
-    .pipe(gulpNgConfig('ENV'))
-    .pipe(plugins.rename('ENV.js'))
-    .pipe(gulp.dest(configPath))
-    .on('error', errorHandler);
-});
+gulp.task('noop', function() {});
 
 // our main sequence, with some conditional jobs depending on params
-gulp.task('default', function (done) {
-  console.log('build: ', build);
+gulp.task('default', function(done) {
   runSequence(
     'clean',
     'iconfont',
@@ -400,7 +342,6 @@ gulp.task('default', function (done) {
       'images',
       'vendor'
     ],
-    server ? 'customizeEnv' : (build && !emulate) ? 'productionENV' : 'devENV',
     'index',
     build ? 'noop' : 'watchers',
     build ? 'noop' : 'serve',
