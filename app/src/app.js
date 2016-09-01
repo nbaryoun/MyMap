@@ -83,7 +83,6 @@ angular.module( 'FirstWeb', [
 .controller( 'MainController',     require( './controllers/mainController'     ) )
 .controller( 'HomeController',     require( './controllers/homeController'     ) )
 .controller( 'SettingsController', require( './controllers/settingsController' ) )
-
 // Angular module services
 //
 .factory( 'ExampleService',        require( './services/ExampleService' ) )
