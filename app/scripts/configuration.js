@@ -2,7 +2,7 @@
 
 /**
  * @ngdoc constant
- * @name FirstWeb.API_ENDPOINT
+ * @name FirstWeb.CONSTANTS
  * @description
  * # API_ENDPOINT
  * Defines the API endpoint where our resources will make requests against.
@@ -13,12 +13,6 @@
 angular.module('FirstWeb')
 
   // development
-  .constant('API_ENDPOINT', {
-    host: 'http://localhost',
-    port: 3000,
-    path: '',
-    needsAuth: false
-  });
 
 
   // live example with HTTP Basic Auth

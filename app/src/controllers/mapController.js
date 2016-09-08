@@ -2,15 +2,15 @@
 
 /**
  * @ngdoc function
- * @name FirstWeb.controller:MainController
+ * @name FirstWeb.controller:MapController
  * @description
- * # MainController
+ * # MapController
  */
 module.exports = [
     '$scope',
 
     function( $scope )
     {
-        // do something with $scope
+      
     }
 ];

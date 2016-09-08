@@ -2,9 +2,9 @@
 
 /**
  * @ngdoc function
- * @name FirstWeb.controller:SettingsController
+ * @name FirstWeb.controller:ProfileController
  * @description
- * # SettingsController
+ * # ProfileController
  */
 module.exports = [
     '$scope',
