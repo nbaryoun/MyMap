@@ -11,6 +11,8 @@ module.exports = [
 
     function( $scope )
     {
-      
+        $scope.mapCreated= function(map){
+          console.log('map was created');
+        }
     }
 ];

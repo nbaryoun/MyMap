@@ -1,8 +1,10 @@
 <ion-view hide-nav-bar="true">
 
-    <ion-content>
-
-      <button class="button button-stable">
+    <ion-content scroll="false">
+      <div class="map-wrapper">
+        <custom-map on-create="mapCreated(map)" style="height: 100%"></custom-map>
+      </div>
+      <button class="button button-assertive">
         Create Post
       </button>
 

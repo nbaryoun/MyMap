@@ -253,4 +253,8 @@ angular.module( 'FirstWeb', [
 //
 .factory( 'AuthService',        require( './services/AuthService' ) )
 .factory( 'ApiService',            require( './services/ApiService'     ) )
+
+//directives
+.directive('customMap', require('./directives/Map'))
+
 ;
