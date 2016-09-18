@@ -22,8 +22,10 @@ angular.module( 'FirstWeb', [
 ] )
 .run( [
   '$ionicPlatform',
+  '$rootScope',
+  '$state',
 
-  function( $ionicPlatform )
+  function( $ionicPlatform, $rootScope, $state )
   {
 
   $ionicPlatform.ready(function() {
@@ -31,6 +33,13 @@ angular.module( 'FirstWeb', [
   });
 
   // add possible global event handlers here
+    $rootScope.$on("$stateChangeError", function(event, toState, toParams, fromState, fromParams, error) {
+      // We can catch the error thrown when the $requireSignIn promise is rejected
+      // and redirect the user back to the home page
+      if (error === "AUTH_REQUIRED") {
+        $state.go("app.map");
+      }
+    });
 
 } ] )
 
@@ -61,7 +70,15 @@ angular.module( 'FirstWeb', [
         url: '/app',
         abstract: true,
         templateUrl: 'templates/menu.html',
-        controller: 'MenuController'
+        controller: 'MenuController',
+        resolve: {
+          // controller will not be loaded until $waitForSignIn resolves
+          // Auth refers to our $firebaseAuth wrapper in the factory below
+          "currentAuth": ["AuthService", function(AuthService) {
+            // $waitForSignIn returns a promise so the resolve waits for it to complete
+            return AuthService.$waitForSignIn();
+          }]
+        }
       })
       .state('app.login',{
         url: '/login',
@@ -70,6 +87,14 @@ angular.module( 'FirstWeb', [
           'viewContent': {
             templateUrl: 'templates/views/login.html'
           }
+        },
+        resolve: {
+          // controller will not be loaded until $waitForSignIn resolves
+          // Auth refers to our $firebaseAuth wrapper in the factory below
+          "currentAuth": ["AuthService", function(AuthService) {
+            // $waitForSignIn returns a promise so the resolve waits for it to complete
+            return AuthService.$waitForSignIn();
+          }]
         }
       })
       .state('app.register', {
@@ -79,6 +104,14 @@ angular.module( 'FirstWeb', [
           'viewContent': {
             templateUrl: 'templates/views/register.html'
           }
+        },
+        resolve: {
+          // controller will not be loaded until $waitForSignIn resolves
+          // Auth refers to our $firebaseAuth wrapper in the factory below
+          "currentAuth": ["AuthService", function(AuthService) {
+            // $waitForSignIn returns a promise so the resolve waits for it to complete
+            return AuthService.$waitForSignIn();
+          }]
         }
       })
       .state('app.map', {
@@ -89,6 +122,14 @@ angular.module( 'FirstWeb', [
             templateUrl: 'templates/views/map.html',
             controller: 'MapController'
           }
+        },
+        resolve: {
+          // controller will not be loaded until $waitForSignIn resolves
+          // Auth refers to our $firebaseAuth wrapper in the factory below
+          "currentAuth": ["AuthService", function(AuthService) {
+            // $waitForSignIn returns a promise so the resolve waits for it to complete
+            return AuthService.$waitForSignIn();
+          }]
         }
       })
       .state('app.initialProfile', {
@@ -99,6 +140,17 @@ angular.module( 'FirstWeb', [
             templateUrl: 'templates/views/initialProfile.html',
             controller: 'ProfileController'
           }
+        },
+        resolve: {
+
+          // controller will not be loaded until $requireSignIn resolves
+          // Auth refers to our $firebaseAuth wrapper in the factory below
+          "currentAuth": ["AuthService", function(AuthService) {
+            // $requireSignIn returns a promise so the resolve waits for it to complete
+            // If the promise is rejected, it will throw a $stateChangeError (see above)
+            return AuthService.$requireSignIn();
+
+          }]
         }
       })
       .state('app.myProfile', {
@@ -109,6 +161,17 @@ angular.module( 'FirstWeb', [
             templateUrl: 'templates/views/myProfile.html',
             controller: 'ProfileController'
           }
+        },
+        resolve: {
+
+          // controller will not be loaded until $requireSignIn resolves
+          // Auth refers to our $firebaseAuth wrapper in the factory below
+          "currentAuth": ["AuthService", function(AuthService) {
+            // $requireSignIn returns a promise so the resolve waits for it to complete
+            // If the promise is rejected, it will throw a $stateChangeError (see above)
+            return AuthService.$requireSignIn();
+
+          }]
         }
       })
       .state('app.myPosts', {
@@ -119,6 +182,17 @@ angular.module( 'FirstWeb', [
             templateUrl: 'templates/views/myProfile.html',
             controller: 'PostController'
           }
+        },
+        resolve: {
+
+          // controller will not be loaded until $requireSignIn resolves
+          // Auth refers to our $firebaseAuth wrapper in the factory below
+          "currentAuth": ["AuthService", function(AuthService) {
+            // $requireSignIn returns a promise so the resolve waits for it to complete
+            // If the promise is rejected, it will throw a $stateChangeError (see above)
+            return AuthService.$requireSignIn();
+
+          }]
         }
       })
       .state('app.detailedPost', {
@@ -129,6 +203,14 @@ angular.module( 'FirstWeb', [
             templateUrl: 'templates/views/detailedPost.html',
             controller: 'MapController'
           }
+        },
+        resolve: {
+          // controller will not be loaded until $waitForSignIn resolves
+          // Auth refers to our $firebaseAuth wrapper in the factory below
+          "currentAuth": ["AuthService", function(AuthService) {
+            // $waitForSignIn returns a promise so the resolve waits for it to complete
+            return AuthService.$waitForSignIn();
+          }]
         }
       })
       .state('app.createPost', {
@@ -139,6 +221,17 @@ angular.module( 'FirstWeb', [
             templateUrl: 'templates/views/createPost.html',
             controller: 'PostController'
           }
+        },
+        resolve: {
+
+          // controller will not be loaded until $requireSignIn resolves
+          // Auth refers to our $firebaseAuth wrapper in the factory below
+          "currentAuth": ["AuthService", function(AuthService) {
+            // $requireSignIn returns a promise so the resolve waits for it to complete
+            // If the promise is rejected, it will throw a $stateChangeError (see above)
+            return AuthService.$requireSignIn();
+
+          }]
         }
       });
 

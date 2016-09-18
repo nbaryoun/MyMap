@@ -7,11 +7,11 @@
  * # AuthService
  */
 module.exports = [
+  '$firebaseAuth',
 
+  function($firebaseAuth) {
+    return $firebaseAuth();
+  }
 
-    function(  )
-    {
-
-
-    }
 ];
+
