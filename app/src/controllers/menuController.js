@@ -11,9 +11,14 @@ module.exports = [
     'currentAuth',
     'AuthService',
     '$state',
+    '$firebaseObject',
+    '$ionicHistory',
 
-    function( $scope, currentAuth, AuthService, $state  )
+    function( $scope, currentAuth, AuthService, $state, $firebaseObject, $ionicHistory  )
     {
+
+      var ref = firebase.database().ref(); //entire database reference
+
       $scope.user = {};
 
       $scope.authenticated = currentAuth;
@@ -21,8 +26,25 @@ module.exports = [
       $scope.login = function () {
         AuthService.$signInWithEmailAndPassword($scope.user.email, $scope.user.password).then(function (firebaseUser) {
 
-          console.log(firebaseUser);
-          $state.go('app.map');
+          $scope.authenticated = true;
+          var profileRef = ref.child('users').child(firebaseUser.uid).child('profile');
+          var profileObject = $firebaseObject(profileRef);
+
+          profileObject.$loaded().then(function () {
+            if(profileObject.username){
+              $ionicHistory.nextViewOptions({
+                historyRoot: true
+              });
+              $scope.user = {};
+              $state.go('app.map');
+            }else{
+              $ionicHistory.nextViewOptions({
+                historyRoot: true
+              });
+              $scope.user = {};
+              $state.go('app.initialProfile');
+            }
+          })
 
         }).catch(function (error) {
           console.error("Authentication failed: ", error);
@@ -34,8 +56,13 @@ module.exports = [
 
       $scope.register = function () {
         AuthService.$createUserWithEmailAndPassword($scope.user.email, $scope.user.password).then(function (firebaseUser) {
-
+          $scope.authenticated = true;
           console.log(firebaseUser);
+          $ionicHistory.nextViewOptions({
+            historyRoot: true
+          });
+          $scope.user = {};
+          $state.go('app.initialProfile');
 
         }).catch(function (error) {
           console.error("Authorization failed: ", error);
@@ -45,7 +72,11 @@ module.exports = [
 
       $scope.logout = function () {
         AuthService.$signOut();
-
+        $ionicHistory.nextViewOptions({
+          historyRoot: true
+        });
+        $scope.authenticated = false;
+        $state.go('app.map');
       }
 
 

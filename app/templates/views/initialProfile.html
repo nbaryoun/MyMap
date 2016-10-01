@@ -1,25 +1,22 @@
-<ion-view view-title="Make Profile">
+<ion-view view-title="{{action}} Profile">
 
 
   <ion-content>
 
-    <div class="bar bar-header bar-stable">
-      <h1 class="Create Post">bar-stable</h1>
-    </div>
-
     <div class="list list-inset">
 
-      <div class="item">
-        UserName
-      </div>
-      <div class="item">
-        Email
-      </div>
-      <div class="item">
-        Choose File for Profile Image
-      </div>
+      <label class="item item-input">
+        <input type="text" placeholder="Name" ng-model="profile.name">
+      </label>
+      <label class="item item-input">
+        <input type="text" placeholder="Username" ng-model="profile.userName">
+      </label>
 
     </div>
+
+    <button class="button button-block button-dark" ng-click="saveProfile()">
+      Save
+    </button>
 
   </ion-content>
 

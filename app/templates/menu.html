@@ -38,13 +38,13 @@
                 <i class="icon ion-pin"></i>
                 My Posts
               </a>
-              <a menu-close class="item item-icon-left" ng-click="logout()" ng-if="authenticated">
-                <i class="icon ion-android-hand"></i>
-                Logout
+              <a menu-close class="item item-icon-left" ui-sref-active="active" ui-sref="app.myProfile" ng-if="authenticated">
+                <i class="icon ion-person"></i>
+                My Profile
               </a>
               <a menu-close class="item item-icon-left" ng-click="logout()" ng-if="authenticated">
                 <i class="icon ion-android-hand"></i>
-                CreatPost
+                Logout
               </a>
             </div>
         </ion-content>
