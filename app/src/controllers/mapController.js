@@ -13,6 +13,9 @@ module.exports = [
     {
         $scope.mapCreated= function(map){
           console.log('map was created');
+          
         }
     }
+
+
 ];

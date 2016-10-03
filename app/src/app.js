@@ -179,7 +179,7 @@ angular.module( 'FirstWeb', [
         cache: true,
         views: {
           'viewContent': {
-            templateUrl: 'templates/views/myProfile.html',
+            templateUrl: 'templates/views/myPosts.html',
             controller: 'PostController'
           }
         },

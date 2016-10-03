@@ -31,7 +31,7 @@ module.exports = [
           var profileObject = $firebaseObject(profileRef);
 
           profileObject.$loaded().then(function () {
-            if(profileObject.username){
+            if(profileObject.userName){
               $ionicHistory.nextViewOptions({
                 historyRoot: true
               });

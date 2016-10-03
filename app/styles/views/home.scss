@@ -6,6 +6,15 @@
   padding: 1rem;
 }
 
-.map-wrapper{
+.map-wrapper {
   height: 100%;
+}
+
+.map-canvas{
+  @extend .map-wrapper;
+}
+
+.map-spacer{
+  height: $bar-height;
+  position: relative;
 }
