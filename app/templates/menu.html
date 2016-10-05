@@ -30,6 +30,10 @@
                   <i class="icon ion-person"></i>
                   Login
                 </a>
+                <a menu-close class="item item-icon-left" ui-sref-active="active" ui-sref="app.createPost" ng-if="authenticated">
+                <i class="icon ion-android-add"></i>
+                Create Post
+                </a>
                 <a menu-close class="item item-icon-left" ui-sref-active="active" ui-sref="app.register" ng-if="!authenticated">
                   <i class="icon ion-person-add"></i>
                   Register

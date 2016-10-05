@@ -24,12 +24,14 @@ angular.module( 'FirstWeb', [
   '$ionicPlatform',
   '$rootScope',
   '$state',
+  'GeoService',
 
-  function( $ionicPlatform, $rootScope, $state )
+  function( $ionicPlatform, $rootScope, $state, GeoService )
   {
 
   $ionicPlatform.ready(function() {
     // save to use plugins here
+    //GeoService.init();
   });
 
   // add possible global event handlers here
@@ -253,6 +255,7 @@ angular.module( 'FirstWeb', [
 //
 .factory( 'AuthService',        require( './services/AuthService' ) )
 .factory( 'ApiService',            require( './services/ApiService'     ) )
+  .service('GeoService',          require('./services/GeoService'))
 
 //directives
 .directive('customMap', require('./directives/Map'))

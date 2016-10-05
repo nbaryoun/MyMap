@@ -14,7 +14,7 @@ module.exports = [
     '$firebaseObject',
     '$ionicHistory',
 
-    function( $scope, currentAuth, AuthService, $state, $firebaseObject, $ionicHistory  )
+    function( $scope, currentAuth, AuthService, $state, $firebaseObject, $ionicHistory)
     {
 
       var ref = firebase.database().ref(); //entire database reference
@@ -77,8 +77,10 @@ module.exports = [
         });
         $scope.authenticated = false;
         $state.go('app.map');
-      }
+      };
+
 
 
     }
+
 ];

@@ -18,3 +18,18 @@
   height: $bar-height;
   position: relative;
 }
+
+.button-create-post{
+  @extend.button, .button-calm;
+}
+
+.button-center{
+  @extend.button, .button-calm;
+}
+
+.map-buttons{
+   position: absolute;
+   bottom: 7%;
+   left: 3%;
+ }
+

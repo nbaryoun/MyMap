@@ -2,9 +2,16 @@
 
     <ion-content scroll="false" class="has-footer">
         <custom-map on-create="mapCreated(map)"></custom-map>
-      <button class="button button-calm">
+
+      <div class="map-buttons">
+        <button class="button-center" ng-click="centerMap()">
+          Center
+        </button>
+        <br>
+        <button class="button-create-post" ui-sref="app.createPost" ng-if="authenticated">
         Create Post
-      </button>
+        </button>
+      </div>
 
     </ion-content>
 
