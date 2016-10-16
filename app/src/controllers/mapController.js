@@ -34,10 +34,17 @@ module.exports = [
         $scope.loadMarkers = function () {
           $scope.markers = [];
           $scope.posts.forEach(function (post) {
+            var image = {
+              url: "data:image/jpeg;base64,"+ post.picture,
+              size: new google.maps.Size(75,75),
+              origin: new google.maps.Point(0, 0),
+              anchor: new google.maps.Point(0, 32),
+              scaledSize: new google.maps.Size(75,75)
+            };
             var marker = new google.maps.Marker({
               position: post.location,
               map: $scope.map,
-              icon: post.picture
+              icon: image
             });
             $scope.markers.push(marker);
           });

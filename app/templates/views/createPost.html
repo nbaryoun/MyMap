@@ -5,7 +5,7 @@
 
     <div class="list list-inset">
       <div class="image-wrapper">
-        <img src="images/camera.png" height="100%" width="100%" ng-click="choiceSheet()">
+        <img ng-src="{{newPost.picture ? 'data:image/jpeg;base64,'+newPost.picture : 'images/camera.png'}}" height="100%" width="100%" ng-click="choiceSheet()">
       </div>
 
       <label class="item item-input">

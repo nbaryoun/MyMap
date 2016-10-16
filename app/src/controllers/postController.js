@@ -12,8 +12,10 @@ module.exports = [
   'currentAuth',
   'GeoService',
   '$ionicLoading',
+  '$cordovaCamera',
+  '$ionicPopup',
 
-  function ($scope, $firebaseArray, $state, currentAuth, GeoService, $ionicLoading) {
+  function ($scope, $firebaseArray, $state, currentAuth, GeoService, $ionicLoading, $cordovaCamera, $ionicPopup) {
 
     var ref = firebase.database().ref();
     var postRef = ref.child('posts').orderByChild('userid').equalTo(currentAuth.uid);
@@ -24,7 +26,7 @@ module.exports = [
       $scope.myPosts = postsArray;
     });
     $scope.newPost = {
-      picture: 'https://www.google.com/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=0ahUKEwiRq-rqttbPAhVnz1QKHYtJAmoQjRwIBQ&url=https%3A%2F%2Fplacehold.it%2F&psig=AFQjCNGPFwhgLpUmBuc3Ucu5PdRpeRnWug&ust=1476401638329373',
+      picture: null,
       title: '',
       comment: '',
       location: {
@@ -36,6 +38,29 @@ module.exports = [
 
 
     $scope.savePost = function () {
+      if (!$scope.newPost.picture) {
+        var alertPopup = $ionicPopup.alert({
+          title: 'Error',
+          template: 'There is no picture!'
+        });
+
+        alertPopup.then(function(res) {
+          console.log('Thank you.');
+        });
+        return;
+      }
+      else if ($scope.newPost.comment === '' || $scope.newPost.title === '') {
+        var alertPopup = $ionicPopup.alert({
+          title: 'Error',
+          template: 'Please add a title or comment.'
+        });
+
+        alertPopup.then(function(res) {
+          console.log('Thank you.');
+
+        });
+        return;
+      }
       $ionicLoading.show();
       GeoService.getCurrentLocation().then(function () {
         $scope.newPost.location = GeoService.currentLocation;
@@ -54,8 +79,26 @@ module.exports = [
       });
 
     };
-    $scope.choiceSheet =function () {
-      //show the action sheet
+    $scope.choiceSheet = function () {
+      var options = {
+        quality: 50,
+        destinationType: Camera.DestinationType.DATA_URL,
+        sourceType: Camera.PictureSourceType.CAMERA,
+        allowEdit: true,
+        encodingType: Camera.EncodingType.JPEG,
+        targetWidth: 100,
+        targetHeight: 100,
+        popoverOptions: CameraPopoverOptions,
+        saveToPhotoAlbum: false,
+        correctOrientation:true
+      };
+
+      $cordovaCamera.getPicture(options).then(function(imageData) {
+        $scope.newPost.picture =  imageData;
+      }, function(err) {
+        // error
+      });
+
     }
   }
 ];
